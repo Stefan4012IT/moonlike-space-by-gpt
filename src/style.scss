@@ -16,6 +16,26 @@ html, body {
   overflow: hidden;
 }
 
+body {
+  transition: background 2s ease;
+}
+
+body.shifted {
+  background: radial-gradient(ellipse at top, #210025 0%, #000 100%);
+}
+
+// body.shifted .container {
+//   filter: blur(6px);
+//   opacity: 0.5;
+//   transition: all 1s ease;
+// }
+
+.container.blur {
+  filter: blur(6px);
+  opacity: 0.5;
+  transition: all 1s ease;
+}
+
 #stars {
   position: fixed;
   top: 0;
@@ -30,6 +50,12 @@ html, body {
 .container {
   position: relative;
   z-index: 1;
+  opacity: 1;
+}
+
+.container.fade-out {
+  opacity: 0;
+  transition: opacity 2s ease;
 }
 
 // .container {

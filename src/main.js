@@ -21,13 +21,41 @@ function getRandomFragment() {
 const fragmentEl = document.getElementById('fragment');
 fragmentEl.textContent = getRandomFragment();
 
+const container = document.querySelector('.container');
+const message = document.getElementById('hidden-message');
+let shifted = false;
+const shiftSound = document.getElementById('shift-sound');
+
+fragmentEl.addEventListener('click', () => {
+  if (shifted) return; // da se ne dešava više puta
+  shifted = true;
+
+  shiftSound.volume = 0.4; // pojačavamo zvuk prelaza
+  shiftSound?.play();
+
+  document.body.classList.add('shifted');
+  container.classList.add('fade-out', 'blur');
+  message?.classList.remove('visible');
+ 
+  // prvo blur, onda poruka
+  setTimeout(() => {
+    fragmentEl.textContent = "You’re now within.";
+    container.classList.remove('blur');
+
+    setTimeout(() => {
+      container.classList.remove('fade-out');
+    }, 100); // da fade-out ide nakon blur-a
+  }, 2000);
+
+});
+
 // Sound like a space
 
 window.addEventListener('click', () => {
   const audio = document.getElementById('bg-audio');
   if (audio && audio.paused) {
     audio.play().catch(() => console.log("Autoplay blocked"));
-    audio.volume = 0.3;
+    audio.volume = 0.1;
   }
 });
 
