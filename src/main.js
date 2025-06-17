@@ -35,7 +35,7 @@ fragmentEl.addEventListener('click', () => {
 
   document.body.classList.add('shifted');
   container.classList.add('fade-out', 'blur');
-  message?.classList.remove('visible');
+  message?.classList.add('gone');
  
   // prvo blur, onda poruka
   setTimeout(() => {
@@ -45,9 +45,62 @@ fragmentEl.addEventListener('click', () => {
     setTimeout(() => {
       container.classList.remove('fade-out');
     }, 100); // da fade-out ide nakon blur-a
+
+    const echoBox = document.getElementById('echo-container');
+    const echoInput = document.getElementById('echo-input');
+    if (echoBox) {
+      echoBox.classList.remove('hidden');
+      echoBox.classList.add('visible');
+
+
+      // Postavi prethodno upisanu poruku (ako postoji)
+      const savedEcho = localStorage.getItem('moonlike-echo');
+      if (savedEcho && echoInput) {
+        echoInput.value = savedEcho;
+      }
+
+
+      // Reaguj na promenu u inputu
+      echoInput?.addEventListener('input', (e) => {
+        const value = e.target.value;
+        if (value.trim() === '') {
+          localStorage.removeItem('moonlike-echo');
+        } else {
+          localStorage.setItem('moonlike-echo', value);
+        }
+      });
+
+
+    }
   }, 2000);
 
 });
+
+function triggerGlitch() {
+  fragmentEl.classList.add('glitch');
+  setTimeout(() => {
+
+    fragmentEl.classList.remove('glitch');
+  }, 400);
+}
+
+function scheduleFragmentShift() {
+  const delay = Math.floor(Math.random() * 20000) + 10000; // 10-30s
+
+  setTimeout(() => {
+
+    if (!shifted) {
+      triggerGlitch();
+      setTimeout(() => {
+        fragmentEl.textContent = getRandomFragment();
+      }, 300);
+    }
+  }, delay);
+}
+
+scheduleFragmentShift();
+
+
 
 // Sound like a space
 
@@ -139,3 +192,33 @@ setTimeout(() => {
 
 animateStars();
 console.log("You’re not lost. You’re just early.");
+
+const exitBtn = document.getElementById('exit-btn');
+
+exitBtn?.addEventListener('click', () => {
+  localStorage.removeItem('moonlike-echo');
+
+  // Fade to black
+  const blackout = document.createElement('div');
+  blackout.style.position = 'fixed';
+  blackout.style.top = '0';
+  blackout.style.left = '0';
+  blackout.style.width = '100%';
+  blackout.style.height = '100%';
+  blackout.style.background = '#000';
+  blackout.style.transition = 'opacity 2s ease';
+  blackout.style.opacity = '0';
+  blackout.style.zIndex = '9999';
+
+  document.body.appendChild(blackout);
+
+  // Aktiviraj fade
+  setTimeout(() => {
+    blackout.style.opacity = '1';
+  }, 10);
+
+  // Resetuj svet nakon fade-a
+  setTimeout(() => {
+    location.reload();
+  }, 3000);
+});
