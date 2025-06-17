@@ -76,6 +76,28 @@ fragmentEl.addEventListener('click', () => {
 
 });
 
+function triggerBlackout() {
+  const flash = document.getElementById('blackout-flash');
+  if (!flash) return;
+
+  flash.style.opacity = '1';
+
+  setTimeout(() => {
+    flash.style.opacity = '0';
+  }, 400);
+}
+
+function scheduleBlackout() {
+  const delay = Math.floor(Math.random() * 60000) + 30000; // 30–90s
+
+  setTimeout(() => {
+    if (!shifted) triggerBlackout();
+    scheduleBlackout(); // nastavi dalje
+  }, delay);
+}
+
+scheduleBlackout();
+
 function triggerGlitch() {
   fragmentEl.classList.add('glitch');
   setTimeout(() => {
@@ -93,6 +115,7 @@ function scheduleFragmentShift() {
       triggerGlitch();
       setTimeout(() => {
         fragmentEl.textContent = getRandomFragment();
+        scheduleFragmentShift();
       }, 300);
     }
   }, delay);
@@ -222,3 +245,34 @@ exitBtn?.addEventListener('click', () => {
     location.reload();
   }, 3000);
 });
+
+
+
+
+let inactivityTimer;
+
+function showWhisper() {
+  const whisper = document.getElementById('inactivity-whisper');
+  if (whisper && !shifted) {
+    whisper.classList.add('visible');
+  }
+}
+
+function hideWhisper() {
+  const whisper = document.getElementById('inactivity-whisper');
+  if (whisper) {
+    whisper.classList.remove('visible');
+  }
+}
+
+function resetInactivityTimer() {
+  clearTimeout(inactivityTimer);
+  hideWhisper();
+
+  inactivityTimer = setTimeout(() => {
+    showWhisper();
+  }, 6000); // 60 sec
+}
+
+window.addEventListener('mousemove', resetInactivityTimer);
+resetInactivityTimer();

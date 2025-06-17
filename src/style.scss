@@ -196,3 +196,31 @@ body.shifted {
   }
 }
 
+#blackout-flash {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  opacity: 0;
+  z-index: 9998;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+#inactivity-whisper {
+  position: absolute;
+  bottom: 10%;
+  width: 100%;
+  text-align: center;
+  font-size: 1.1rem;
+  color: #666;
+  opacity: 0;
+  transition: opacity 2s ease;
+  pointer-events: none;
+}
+
+#inactivity-whisper.visible {
+  opacity: 1;
+}
