@@ -3,30 +3,30 @@ import './style.scss';
 
 import { initStars, animateStars, startWarpStarfield } from './canvas/stars.js';
 import { startInfinityDrawing } from './canvas/infinity.js';
+import { saveEcho, loadEchoHistory, clearEchoStorage } from './core/storage.js';
+import { triggerGlitch } from './core/glitch.js';
+import { setupAudioToggle } from './core/audio.js';
+import { getRandomFragment } from './core/fragments.js';
+import { scheduleBlackout } from './core/blackout.js';
+import { scheduleFragmentShift } from './core/fragmentShift.js';
+import { setupInactivityMonitor } from './core/inactivity.js';
+
 
 // Fragemnts of texts
-const fragments = [
-  "You arrived exactly when you were meant to.",
-  "The gravity here feels optional.",
-  "Nothing happens here, but you feel everything.",
-  "Someone dreamed of you before you existed.",
-  "This place is made of memory and static.",
-  "The stars don’t speak – they listen.",
-  "It’s always night here, but no one sleeps.",
-  "You’re not lost. You’re just early."
-];
 
 const canvas = document.getElementById('stars');
 initStars(canvas);
 animateStars();
 
-function getRandomFragment() {
-  const randomIndex = Math.floor(Math.random() * fragments.length);
-  return fragments[randomIndex];
-}
+let shifted = false;
+
 
 const fragmentEl = document.getElementById('fragment');
 fragmentEl.textContent = getRandomFragment();
+fragmentEl.textContent = getRandomFragment();
+scheduleFragmentShift(fragmentEl, shifted);
+
+setupInactivityMonitor({ shiftedRef: () => shifted });
 
 const reentryMessage = document.getElementById('reentry-message');
 const hasEcho = localStorage.getItem('moonlike-echo');
@@ -39,7 +39,6 @@ if (hasEcho && reentryMessage) {
 
 const container = document.querySelector('.container');
 const message = document.getElementById('hidden-message');
-let shifted = false;
 const shiftSound = document.getElementById('shift-sound');
 const returnBtn = document.createElement('button');
 
@@ -68,24 +67,6 @@ fragmentEl.addEventListener('click', () => {
     if (echoBox) {
       echoBox.classList.remove('hidden');
       echoBox.classList.add('visible');
-
-      const echoLog = document.getElementById('echo-log');
-      const echoList = document.getElementById('echo-list');
-
-      function loadEchoHistory() {
-        const stored = localStorage.getItem('moonlike-echo-history');
-        if (!stored) return;
-        const history = JSON.parse(stored);
-        echoList.innerHTML = ''; // reset listu
-
-        history.forEach(item => {
-          const li = document.createElement('li');
-          li.textContent = item;
-          echoList.appendChild(li);
-        });
-
-        echoLog.classList.add('visible');
-      }
 
       loadEchoHistory();
 
@@ -141,10 +122,10 @@ fragmentEl.addEventListener('click', () => {
 
 
       // Postavi prethodno upisanu poruku (ako postoji)
-      const savedEcho = localStorage.getItem('moonlike-echo');
-      if (savedEcho && echoInput) {
-        echoInput.value = savedEcho;
-      }
+      // const savedEcho = localStorage.getItem('moonlike-echo');
+      // if (savedEcho && echoInput) {
+      //   echoInput.value = savedEcho;
+      // }
 
 
       // Reaguj na promenu u inputu
@@ -162,6 +143,7 @@ fragmentEl.addEventListener('click', () => {
           if (!history.includes(value)) {
             history.push(value);
             localStorage.setItem('moonlike-echo-history', JSON.stringify(history));
+            saveEcho(value);
             loadEchoHistory(); // osveži prikaz
           }
         }, 2000); // čeka 2 sekunde nakon poslednjeg unosa
@@ -186,67 +168,20 @@ function triggerBlackout() {
   }, 400);
 }
 
-function scheduleBlackout() {
-  const delay = Math.floor(Math.random() * 60000) + 30000; // 30–90s
-
-  setTimeout(() => {
-    if (!shifted) triggerBlackout();
-    scheduleBlackout(); // nastavi dalje
-  }, delay);
-}
 
 scheduleBlackout();
 
-function triggerGlitch() {
-  fragmentEl.classList.add('glitch');
-  setTimeout(() => {
-
-    fragmentEl.classList.remove('glitch');
-  }, 400);
-}
-
-function scheduleFragmentShift() {
-  const delay = Math.floor(Math.random() * 20000) + 10000; // 10-30s
-
-  setTimeout(() => {
-
-    if (!shifted) {
-      triggerGlitch();
-      setTimeout(() => {
-        fragmentEl.textContent = getRandomFragment();
-
-        scheduleFragmentShift();
-      }, 300);
-    }
-  }, delay);
-}
 
 scheduleFragmentShift();
 
 // Sound like a space
-
-window.addEventListener('click', () => {
-  const audio = document.getElementById('bg-audio');
-  if (audio && audio.paused) {
-    audio.play().catch(() => console.log("Autoplay blocked"));
-    audio.volume = 0.1;
-  }
-});
-
-
-
-
-// Mouse float
-const mouseParticles = [];
-
-canvas.addEventListener('mousemove', (e) => {
-  mouseParticles.push({
-    x: e.clientX,
-    y: e.clientY,
-    alpha: 1,
-    radius: Math.random() * 4 + 1
-  });
-});
+setupAudioToggle(document.getElementById('bg-audio'), [
+  '#portal',
+  '#return-btn',
+  '#exit-btn',
+  '.echo-button',
+  '#echo-input'
+]);
 
 // First Message
 setTimeout(() => {
@@ -260,8 +195,7 @@ console.log("You’re not lost. You’re just early.");
 const exitBtn = document.getElementById('exit-btn');
 
 exitBtn?.addEventListener('click', () => {
-  localStorage.removeItem('moonlike-echo');
-  localStorage.removeItem('moonlike-echo-history');
+  clearEchoStorage();
   // Fade to black
   const blackout = document.createElement('div');
   blackout.style.position = 'fixed';
@@ -290,33 +224,33 @@ exitBtn?.addEventListener('click', () => {
 
 
 
-let inactivityTimer;
+// let inactivityTimer;
 
-function showWhisper() {
-  const whisper = document.getElementById('inactivity-whisper');
-  if (whisper && !shifted) {
-    whisper.classList.add('visible');
-  }
-}
+// function showWhisper() {
+//   const whisper = document.getElementById('inactivity-whisper');
+//   if (whisper && !shifted) {
+//     whisper.classList.add('visible');
+//   }
+// }
 
-function hideWhisper() {
-  const whisper = document.getElementById('inactivity-whisper');
-  if (whisper) {
-    whisper.classList.remove('visible');
-  }
-}
+// function hideWhisper() {
+//   const whisper = document.getElementById('inactivity-whisper');
+//   if (whisper) {
+//     whisper.classList.remove('visible');
+//   }
+// }
 
-function resetInactivityTimer() {
-  clearTimeout(inactivityTimer);
-  hideWhisper();
+// function resetInactivityTimer() {
+//   clearTimeout(inactivityTimer);
+//   hideWhisper();
 
-  inactivityTimer = setTimeout(() => {
-    showWhisper();
-  }, 6000); // 60 sec
-}
+//   inactivityTimer = setTimeout(() => {
+//     showWhisper();
+//   }, 6000); // 60 sec
+// }
 
-window.addEventListener('mousemove', resetInactivityTimer);
-resetInactivityTimer();
+// window.addEventListener('mousemove', resetInactivityTimer);
+// resetInactivityTimer();
 
 
 
