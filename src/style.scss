@@ -24,11 +24,10 @@ body.shifted {
   background: radial-gradient(ellipse at top, #210025 0%, #000 100%);
 }
 
-// body.shifted .container {
-//   filter: blur(6px);
-//   opacity: 0.5;
-//   transition: all 1s ease;
-// }
+body.portal-transition {
+  background: radial-gradient(ellipse at center, #000 0%, #120012 100%);
+  transition: background 3s ease;
+}
 
 .container.blur {
   filter: blur(6px);
@@ -45,6 +44,7 @@ body.shifted {
   height: 100%;
   display: block;
   background: transparent;
+  z-index: 0;
 }
 
 .container {
@@ -219,8 +219,144 @@ body.shifted {
   opacity: 0;
   transition: opacity 2s ease;
   pointer-events: none;
+  visibility: hidden;
 }
 
 #inactivity-whisper.visible {
   opacity: 1;
+  visibility: visible;
+}
+
+
+#reentry-message {
+  position: absolute;
+  top: 10%;
+  width: 100%;
+  text-align: center;
+  font-size: 1.2rem;
+  color: #999;
+  opacity: 0;
+  transition: opacity 2s ease;
+  visibility: hidden;
+}
+
+#reentry-message.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+#echo-log {
+  position: absolute;
+  bottom: 8rem;
+  width: 100%;
+  text-align: center;
+  color: #aaa;
+  font-size: 0.9rem;
+  opacity: 0;
+  transition: opacity 1.5s ease;
+  visibility: hidden;
+}
+
+#echo-log.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+#echo-log ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem auto 0;
+}
+
+#echo-log li {
+  margin-bottom: 0.3rem;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+#portal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px;
+  height: 120px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #aaa;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 2s ease;
+  animation: pulse 3s infinite ease-in-out;
+  z-index: 10;
+  visibility: hidden;
+}
+
+#portal.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.05);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.3);
+  }
+}
+
+.second-layer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #ddd;
+  font-size: 1.4rem;
+  text-align: center;
+  max-width: 80vw;
+  opacity: 0;
+  animation: fadeIn 4s ease forwards;
+  text-shadow: 0 0 12px #ffffff11;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+#infinity-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000 !important;
+  pointer-events: none;
+}
+
+
+#return-btn {
+  margin-top: 2rem;
+  padding: 0.5rem 1.2rem;
+  font-size: 0.9rem;
+  background: transparent;
+  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 6px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
+}
+
+#return-btn:hover {
+  color: white;
+  border-color: white;
 }

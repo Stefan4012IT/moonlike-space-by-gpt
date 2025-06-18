@@ -1,6 +1,9 @@
 // main.js
 import './style.scss';
 
+import { initStars, animateStars, startWarpStarfield } from './canvas/stars.js';
+import { startInfinityDrawing } from './canvas/infinity.js';
+
 // Fragemnts of texts
 const fragments = [
   "You arrived exactly when you were meant to.",
@@ -13,6 +16,10 @@ const fragments = [
   "You’re not lost. You’re just early."
 ];
 
+const canvas = document.getElementById('stars');
+initStars(canvas);
+animateStars();
+
 function getRandomFragment() {
   const randomIndex = Math.floor(Math.random() * fragments.length);
   return fragments[randomIndex];
@@ -21,10 +28,20 @@ function getRandomFragment() {
 const fragmentEl = document.getElementById('fragment');
 fragmentEl.textContent = getRandomFragment();
 
+const reentryMessage = document.getElementById('reentry-message');
+const hasEcho = localStorage.getItem('moonlike-echo');
+
+if (hasEcho && reentryMessage) {
+  setTimeout(() => {
+    reentryMessage.classList.add('visible');
+  }, 3000); // pojavi se lagano nakon što uđeš
+}
+
 const container = document.querySelector('.container');
 const message = document.getElementById('hidden-message');
 let shifted = false;
 const shiftSound = document.getElementById('shift-sound');
+const returnBtn = document.createElement('button');
 
 fragmentEl.addEventListener('click', () => {
   if (shifted) return; // da se ne dešava više puta
@@ -52,6 +69,76 @@ fragmentEl.addEventListener('click', () => {
       echoBox.classList.remove('hidden');
       echoBox.classList.add('visible');
 
+      const echoLog = document.getElementById('echo-log');
+      const echoList = document.getElementById('echo-list');
+
+      function loadEchoHistory() {
+        const stored = localStorage.getItem('moonlike-echo-history');
+        if (!stored) return;
+        const history = JSON.parse(stored);
+        echoList.innerHTML = ''; // reset listu
+
+        history.forEach(item => {
+          const li = document.createElement('li');
+          li.textContent = item;
+          echoList.appendChild(li);
+        });
+
+        echoLog.classList.add('visible');
+      }
+
+      loadEchoHistory();
+
+      const portal = document.getElementById('portal');
+      if (portal && fragmentEl) {
+        setTimeout(() => {
+          portal.classList.add('visible');
+          fragmentEl.style.display = 'none';
+        }, 4000); // neka se pojavi malo kasnije, da "čekanje" ima težinu
+        portal?.addEventListener('click', () => {
+          // Fade out current world
+          document.body.classList.add('portal-transition');
+
+          // Ukloni prethodne poruke
+          fragmentEl.classList.remove('fragment-fade');
+          fragmentEl.textContent = '';
+          portal.classList.remove('visible');
+          container.classList.add('fade-out');
+
+          setTimeout(() => {
+            // Uklanjamo stare slojeve
+            container.style.display = 'none';
+            document.getElementById('echo-log')?.remove();
+            document.getElementById('echo-container')?.remove();
+            document.getElementById('reentry-message')?.remove();
+            document.getElementById('portal')?.remove();
+            document.getElementById('fragment')?.remove();
+            document.getElementById('hidden-message')?.remove();
+
+
+            // Dodajemo poruku iz drugog sloja
+            const secondLayer = document.createElement('div');
+            secondLayer.classList.add('second-layer');
+
+
+            secondLayer.innerHTML = `<p>You've crossed into the place where nothing remains... and yet something always returns.</p>`;
+            document.body.appendChild(secondLayer);
+ 
+            returnBtn.id = 'return-btn';
+            returnBtn.innerText = 'Return';
+            secondLayer.appendChild(returnBtn);
+            setTimeout(() => {
+              const infinityCanvas = document.createElement('canvas');
+              infinityCanvas.id = 'infinity-canvas';
+              document.body.appendChild(infinityCanvas);
+
+              startInfinityDrawing(infinityCanvas);
+              startWarpStarfield();
+            }, 300);
+          }, 1000);
+        });
+      }
+
 
       // Postavi prethodno upisanu poruku (ako postoji)
       const savedEcho = localStorage.getItem('moonlike-echo');
@@ -61,13 +148,23 @@ fragmentEl.addEventListener('click', () => {
 
 
       // Reaguj na promenu u inputu
+      let echoDebounce;
+
       echoInput?.addEventListener('input', (e) => {
-        const value = e.target.value;
-        if (value.trim() === '') {
-          localStorage.removeItem('moonlike-echo');
-        } else {
-          localStorage.setItem('moonlike-echo', value);
-        }
+        const value = e.target.value.trim();
+        localStorage.setItem('moonlike-echo', value);
+
+        clearTimeout(echoDebounce);
+        echoDebounce = setTimeout(() => {
+          if (value === '') return;
+
+          let history = JSON.parse(localStorage.getItem('moonlike-echo-history') || '[]');
+          if (!history.includes(value)) {
+            history.push(value);
+            localStorage.setItem('moonlike-echo-history', JSON.stringify(history));
+            loadEchoHistory(); // osveži prikaz
+          }
+        }, 2000); // čeka 2 sekunde nakon poslednjeg unosa
       });
 
 
@@ -75,6 +172,8 @@ fragmentEl.addEventListener('click', () => {
   }, 2000);
 
 });
+
+
 
 function triggerBlackout() {
   const flash = document.getElementById('blackout-flash');
@@ -115,6 +214,7 @@ function scheduleFragmentShift() {
       triggerGlitch();
       setTimeout(() => {
         fragmentEl.textContent = getRandomFragment();
+
         scheduleFragmentShift();
       }, 300);
     }
@@ -122,8 +222,6 @@ function scheduleFragmentShift() {
 }
 
 scheduleFragmentShift();
-
-
 
 // Sound like a space
 
@@ -135,63 +233,6 @@ window.addEventListener('click', () => {
   }
 });
 
-// Canvas with stars
-
-const canvas = document.getElementById('stars');
-const ctx = canvas.getContext('2d');
-
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
-
-const numStars = 150;
-const stars = [];
-
-for (let i = 0; i < numStars; i++) {
-  stars.push({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    radius: Math.random() * 1.5,
-    alpha: Math.random(),
-    delta: Math.random() * 0.02
-  });
-}
-
-function animateStars() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Crtanje zvezda
-  for (let star of stars) {
-    star.alpha += star.delta;
-    if (star.alpha <= 0 || star.alpha >= 1) star.delta *= -1;
-
-    ctx.beginPath();
-    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
-    ctx.fill();
-  }
-
-  // Crtanje tragova miša
-  for (let i = 0; i < mouseParticles.length; i++) {
-    const p = mouseParticles[i];
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(173, 216, 230, ${p.alpha})`;
-    ctx.fill();
-    p.alpha -= 0.02;
-
-    if (p.alpha <= 0) {
-      mouseParticles.splice(i, 1);
-      i--;
-    }
-  }
-
-  requestAnimationFrame(animateStars);
-}
 
 
 
@@ -213,14 +254,14 @@ setTimeout(() => {
   if (msg) msg.classList.add('visible');
 }, 7000);
 
-animateStars();
+// animateStars();
 console.log("You’re not lost. You’re just early.");
 
 const exitBtn = document.getElementById('exit-btn');
 
 exitBtn?.addEventListener('click', () => {
   localStorage.removeItem('moonlike-echo');
-
+  localStorage.removeItem('moonlike-echo-history');
   // Fade to black
   const blackout = document.createElement('div');
   blackout.style.position = 'fixed';
@@ -276,3 +317,24 @@ function resetInactivityTimer() {
 
 window.addEventListener('mousemove', resetInactivityTimer);
 resetInactivityTimer();
+
+
+
+
+
+returnBtn.addEventListener('click', () => {
+  // Ukloni The Other Side
+  document.querySelector('.second-layer')?.remove();
+  document.getElementById('infinity-canvas')?.remove();
+
+  // Vrati prvi sloj
+  container.style.display = 'block';
+  document.getElementById('portal')?.classList.add('visible');
+  fragmentEl.style.display = 'block';
+  fragmentEl.textContent = "You’re now within.";
+  document.body.classList.add('shifted');
+  container.classList.add('fade-out', 'blur');
+
+  // Restart zvezda (pulsirajući sistem)
+  animateStars();
+});
