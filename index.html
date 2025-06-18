@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>moonlike.space</title>
-    <script type="module" crossorigin src="/moonlike-space-by-gpt/assets/index-CCvUkRaG.js"></script>
-    <link rel="stylesheet" crossorigin href="/moonlike-space-by-gpt/assets/index-FmodUELe.css">
+    <script type="module" crossorigin src="/moonlike-space-by-gpt/assets/index-DACg11D5.js"></script>
+    <link rel="stylesheet" crossorigin href="/moonlike-space-by-gpt/assets/index-BoBqPeZJ.css">
   </head>
   <body>
     <div id="blackout-flash"></div>
@@ -13,6 +13,9 @@
     <div class="container">
       <div class="whisper">
         <p id="fragment">You arrived exactly when you were meant to.</p>
+        <div id="portal" class="hidden">
+          <span>enter</span>
+        </div>
       </div>
     </div>
     <div class="message" id="hidden-message">
@@ -21,8 +24,15 @@
     <div id="inactivity-whisper" class="hidden">
       <p>It speaks when you are still.</p>
     </div>
+    <div id="reentry-message" class="hidden">
+      <p>You’ve returned. Not many do.</p>
+    </div>
     <div id="echo-container" class="echo hidden">
       <input type="text" id="echo-input" placeholder="Say something to the void..." />
+    </div>
+    <div id="echo-log" class="hidden">
+      <h3>Previous echoes:</h3>
+      <ul id="echo-list"></ul>
     </div>
     <div class="exit-button">
       <button id="exit-btn">Forget everything</button>
