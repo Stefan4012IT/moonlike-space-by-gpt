@@ -1,6 +1,7 @@
 let ctx, canvas;
 let stars = [];
 let mouseParticles = [];
+let starsLoopId;
 
 export function initStars(canvasElement) {
   canvas = canvasElement;
@@ -66,7 +67,7 @@ export function animateStars() {
     }
   }
 
-  requestAnimationFrame(animateStars);
+  starsLoopId = requestAnimationFrame(animateStars);
 }
 
 export function startWarpStarfield() {
@@ -110,4 +111,11 @@ export function startWarpStarfield() {
   }
 
   animateWarpStars();
+}
+
+export function stopStars() {
+  if (starsLoopId) {
+    cancelAnimationFrame(starsLoopId);
+    starsLoopId = null;
+  }
 }

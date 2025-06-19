@@ -2,7 +2,8 @@ let ctx, canvas;
 let stars = [];
 let mouseParticles = [];
 
-export function startInfinityDrawing(canvas) {
+export function startInfinityDrawing(canvasElement) {
+  canvas = canvasElement;
   ctx = canvas.getContext('2d');
   resizeInfinityCanvas();
   window.addEventListener('resize', resizeInfinityCanvas);

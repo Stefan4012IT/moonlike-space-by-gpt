@@ -66,6 +66,11 @@ body.portal-transition {
   animation: float 6s ease-in-out infinite;
 }
 
+#fragment.fade-in {
+    opacity: 0;
+    animation: fadeIn 2s ease forwards;
+}
+
 .whisper:hover {
   cursor: pointer;
 }

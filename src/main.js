@@ -4,12 +4,13 @@ import './style.scss';
 import { initStars, animateStars, startWarpStarfield } from './canvas/stars.js';
 import { startInfinityDrawing } from './canvas/infinity.js';
 import { saveEcho, loadEchoHistory, clearEchoStorage } from './core/storage.js';
-import { triggerGlitch } from './core/glitch.js';
 import { setupAudioToggle } from './core/audio.js';
 import { getRandomFragment } from './core/fragments.js';
-import { scheduleBlackout } from './core/blackout.js';
+import { scheduleBlackout, triggerBlackout } from './core/blackout.js';
 import { scheduleFragmentShift } from './core/fragmentShift.js';
 import { setupInactivityMonitor } from './core/inactivity.js';
+import { initLayerZero } from './layers/layerZero.js';
+import { initPortalLayer } from './layers/layerPortal.js';
 
 
 // Fragemnts of texts
@@ -19,7 +20,14 @@ initStars(canvas);
 animateStars();
 
 let shifted = false;
+const getShifted = () => shifted;
+const setShifted = (val) => { shifted = val; };
+initLayerZero((val) => {
+  if (val !== undefined) setShifted(val);
+  return getShifted();
+});
 
+initPortalLayer();
 
 const fragmentEl = document.getElementById('fragment');
 fragmentEl.textContent = getRandomFragment();
@@ -28,145 +36,129 @@ scheduleFragmentShift(fragmentEl, shifted);
 
 setupInactivityMonitor({ shiftedRef: () => shifted });
 
-const reentryMessage = document.getElementById('reentry-message');
-const hasEcho = localStorage.getItem('moonlike-echo');
+// const reentryMessage = document.getElementById('reentry-message');
+// const hasEcho = localStorage.getItem('moonlike-echo');
 
-if (hasEcho && reentryMessage) {
-  setTimeout(() => {
-    reentryMessage.classList.add('visible');
-  }, 3000); // pojavi se lagano nakon što uđeš
-}
+// if (hasEcho && reentryMessage) {
+//   setTimeout(() => {
+//     reentryMessage.classList.add('visible');
+//   }, 3000); // pojavi se lagano nakon što uđeš
+// }
 
 const container = document.querySelector('.container');
 const message = document.getElementById('hidden-message');
 const shiftSound = document.getElementById('shift-sound');
 const returnBtn = document.createElement('button');
 
-fragmentEl.addEventListener('click', () => {
-  if (shifted) return; // da se ne dešava više puta
-  shifted = true;
+// fragmentEl.addEventListener('click', () => {
+//   if (shifted) return; // da se ne dešava više puta
+//   shifted = true;
 
-  shiftSound.volume = 0.4; // pojačavamo zvuk prelaza
-  shiftSound?.play();
+//   shiftSound.volume = 0.4; // pojačavamo zvuk prelaza
+//   shiftSound?.play();
 
-  document.body.classList.add('shifted');
-  container.classList.add('fade-out', 'blur');
-  message?.classList.add('gone');
+//   document.body.classList.add('shifted');
+//   container.classList.add('fade-out', 'blur');
+//   message?.classList.add('gone');
  
-  // prvo blur, onda poruka
-  setTimeout(() => {
-    fragmentEl.textContent = "You’re now within.";
-    container.classList.remove('blur');
+//   // prvo blur, onda poruka
+//   setTimeout(() => {
+//     fragmentEl.textContent = "You’re now within.";
+//     container.classList.remove('blur');
 
-    setTimeout(() => {
-      container.classList.remove('fade-out');
-    }, 100); // da fade-out ide nakon blur-a
+//     setTimeout(() => {
+//       container.classList.remove('fade-out');
+//     }, 100); // da fade-out ide nakon blur-a
 
-    const echoBox = document.getElementById('echo-container');
-    const echoInput = document.getElementById('echo-input');
-    if (echoBox) {
-      echoBox.classList.remove('hidden');
-      echoBox.classList.add('visible');
+//     const echoBox = document.getElementById('echo-container');
+//     const echoInput = document.getElementById('echo-input');
+//     if (echoBox) {
+//       echoBox.classList.remove('hidden');
+//       echoBox.classList.add('visible');
 
-      loadEchoHistory();
+//       loadEchoHistory();
 
-      const portal = document.getElementById('portal');
-      if (portal && fragmentEl) {
-        setTimeout(() => {
-          portal.classList.add('visible');
-          fragmentEl.style.display = 'none';
-        }, 4000); // neka se pojavi malo kasnije, da "čekanje" ima težinu
-        portal?.addEventListener('click', () => {
-          // Fade out current world
-          document.body.classList.add('portal-transition');
+//       const portal = document.getElementById('portal');
+//       if (portal && fragmentEl) {
+//         setTimeout(() => {
+//           portal.classList.add('visible');
+//           fragmentEl.style.display = 'none';
+//         }, 4000); // neka se pojavi malo kasnije, da "čekanje" ima težinu
+//         portal?.addEventListener('click', () => {
+//           // Fade out current world
+//           document.body.classList.add('portal-transition');
 
-          // Ukloni prethodne poruke
-          fragmentEl.classList.remove('fragment-fade');
-          fragmentEl.textContent = '';
-          portal.classList.remove('visible');
-          container.classList.add('fade-out');
+//           // Ukloni prethodne poruke
+//           fragmentEl.classList.remove('fragment-fade');
+//           fragmentEl.textContent = '';
+//           portal.classList.remove('visible');
+//           container.classList.add('fade-out');
 
-          setTimeout(() => {
-            // Uklanjamo stare slojeve
-            container.style.display = 'none';
-            document.getElementById('echo-log')?.remove();
-            document.getElementById('echo-container')?.remove();
-            document.getElementById('reentry-message')?.remove();
-            document.getElementById('portal')?.remove();
-            document.getElementById('fragment')?.remove();
-            document.getElementById('hidden-message')?.remove();
-
-
-            // Dodajemo poruku iz drugog sloja
-            const secondLayer = document.createElement('div');
-            secondLayer.classList.add('second-layer');
+//           setTimeout(() => {
+//             // Uklanjamo stare slojeve
+//             container.style.display = 'none';
+//             document.getElementById('echo-log')?.remove();
+//             document.getElementById('echo-container')?.remove();
+//             document.getElementById('reentry-message')?.remove();
+//             document.getElementById('portal')?.remove();
+//             document.getElementById('fragment')?.remove();
+//             document.getElementById('hidden-message')?.remove();
 
 
-            secondLayer.innerHTML = `<p>You've crossed into the place where nothing remains... and yet something always returns.</p>`;
-            document.body.appendChild(secondLayer);
+//             // Dodajemo poruku iz drugog sloja
+//             const secondLayer = document.createElement('div');
+//             secondLayer.classList.add('second-layer');
+
+
+//             secondLayer.innerHTML = `<p>You've crossed into the place where nothing remains... and yet something always returns.</p>`;
+//             document.body.appendChild(secondLayer);
  
-            returnBtn.id = 'return-btn';
-            returnBtn.innerText = 'Return';
-            secondLayer.appendChild(returnBtn);
-            setTimeout(() => {
-              const infinityCanvas = document.createElement('canvas');
-              infinityCanvas.id = 'infinity-canvas';
-              document.body.appendChild(infinityCanvas);
+//             returnBtn.id = 'return-btn';
+//             returnBtn.innerText = 'Return';
+//             secondLayer.appendChild(returnBtn);
+//             setTimeout(() => {
+//               const infinityCanvas = document.createElement('canvas');
+//               infinityCanvas.id = 'infinity-canvas';
+//               document.body.appendChild(infinityCanvas);
 
-              startInfinityDrawing(infinityCanvas);
-              startWarpStarfield();
-            }, 300);
-          }, 1000);
-        });
-      }
-
-
-      // Postavi prethodno upisanu poruku (ako postoji)
-      // const savedEcho = localStorage.getItem('moonlike-echo');
-      // if (savedEcho && echoInput) {
-      //   echoInput.value = savedEcho;
-      // }
+//               startInfinityDrawing(infinityCanvas);
+//               startWarpStarfield();
+//             }, 300);
+//           }, 1000);
+//         });
+//       }
 
 
-      // Reaguj na promenu u inputu
-      let echoDebounce;
+//       // Reaguj na promenu u inputu
+//       let echoDebounce;
 
-      echoInput?.addEventListener('input', (e) => {
-        const value = e.target.value.trim();
-        localStorage.setItem('moonlike-echo', value);
+//       echoInput?.addEventListener('input', (e) => {
+//         const value = e.target.value.trim();
+//         localStorage.setItem('moonlike-echo', value);
 
-        clearTimeout(echoDebounce);
-        echoDebounce = setTimeout(() => {
-          if (value === '') return;
+//         clearTimeout(echoDebounce);
+//         echoDebounce = setTimeout(() => {
+//           if (value === '') return;
 
-          let history = JSON.parse(localStorage.getItem('moonlike-echo-history') || '[]');
-          if (!history.includes(value)) {
-            history.push(value);
-            localStorage.setItem('moonlike-echo-history', JSON.stringify(history));
-            saveEcho(value);
-            loadEchoHistory(); // osveži prikaz
-          }
-        }, 2000); // čeka 2 sekunde nakon poslednjeg unosa
-      });
-
-
-    }
-  }, 2000);
-
-});
+//           let history = JSON.parse(localStorage.getItem('moonlike-echo-history') || '[]');
+//           if (!history.includes(value)) {
+//             history.push(value);
+//             localStorage.setItem('moonlike-echo-history', JSON.stringify(history));
+//             saveEcho(value);
+//             loadEchoHistory(); // osveži prikaz
+//           }
+//         }, 2000); // čeka 2 sekunde nakon poslednjeg unosa
+//       });
 
 
+//     }
+//   }, 2000);
 
-function triggerBlackout() {
-  const flash = document.getElementById('blackout-flash');
-  if (!flash) return;
+// });
 
-  flash.style.opacity = '1';
+triggerBlackout();
 
-  setTimeout(() => {
-    flash.style.opacity = '0';
-  }, 400);
-}
+
 
 
 scheduleBlackout();
